@@ -1,0 +1,64 @@
+{
+  "name": "dynamodb-cursor-based-pagination",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test",
+    "test-with-env": "tsdx test --setupFiles dotenv/config",
+    "lint": "tsdx lint",
+    "prepare": "tsdx build",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {
+    "aws-sdk": "^2.796.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsdx lint"
+    }
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "author": "Pedro Arantes <arantespp@gmail.com> (https://twitter.com/arantespp)",
+  "module": "dist/dynamodb-cursor-based-pagination.esm.js",
+  "size-limit": [
+    {
+      "path": "dist/dynamodb-cursor-based-pagination.cjs.production.min.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/dynamodb-cursor-based-pagination.esm.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@size-limit/preset-small-lib": "^4.8.0",
+    "@types/deep-equal": "^1.0.1",
+    "@types/faker": "^5.1.4",
+    "aws-sdk": "^2.797.0",
+    "deep-equal": "^2.0.4",
+    "dotenv": "^8.2.0",
+    "faker": "^5.1.0",
+    "husky": "^4.3.0",
+    "size-limit": "^4.8.0",
+    "tsdx": "^0.14.1",
+    "tslib": "^2.0.3",
+    "typescript": "^4.1.2"
+  }
+}
