@@ -34,6 +34,10 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
+  "np": {
+    "anyBranch": false,
+    "branch": "main"
+  },
   "author": "Pedro Arantes <arantespp@gmail.com> (https://twitter.com/arantespp)",
   "module": "dist/dynamodb-cursor-based-pagination.esm.js",
   "size-limit": [
@@ -55,6 +59,7 @@
     "dotenv": "^8.2.0",
     "faker": "^5.1.0",
     "husky": "^4.3.0",
+    "np": "^7.0.0",
     "size-limit": "^4.8.0",
     "tsdx": "^0.14.1",
     "tslib": "^2.0.3",
