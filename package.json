@@ -15,7 +15,6 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "tsdx test",
-    "test-with-env": "tsdx test --setupFiles dotenv/config",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",

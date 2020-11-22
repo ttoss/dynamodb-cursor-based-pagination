@@ -37,13 +37,20 @@ export const queryDynamoDB = async <T>({
     Limit: limit,
   };
 
-  const { Items, LastEvaluatedKey } = await documentClient
-    .query(queryParams)
-    .promise();
+  const {
+    Items,
+    LastEvaluatedKey,
+    ConsumedCapacity,
+    Count,
+    ScannedCount,
+  } = await documentClient.query(queryParams).promise();
 
   return {
     items: Items as T[],
     lastEvaluatedKey: LastEvaluatedKey?.[rangeKeyName] as string | undefined,
+    consumedCapacity: ConsumedCapacity,
+    count: Count,
+    scannedCount: ScannedCount,
   };
 };
 
@@ -92,26 +99,44 @@ const paginate = async <T = any>({
       limit: undefined as number | undefined,
     };
 
-    if (after) {
+    if (after || first) {
+      if (first && first < 0) {
+        throw new Error('FirstMustNotBeNegative');
+      }
+
+      if (after) {
+        params.expressionAttributeNames['#cursor'] = rangeKeyName;
+        params.expressionAttributeValues[':cursor'] = after;
+        const operator = sort === 'ASC' ? '>' : '<';
+        params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
+      }
       params.scanIndexForward = sort === 'ASC';
-      params.expressionAttributeNames['#cursor'] = rangeKeyName;
-      params.expressionAttributeValues[':cursor'] = after;
-      const operator = sort === 'ASC' ? '>' : '<';
-      params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
       params.limit = first;
-    } else if (before) {
+    } else if (before || last) {
+      if (last && last < 0) {
+        throw new Error('LastMustNotBeNegative');
+      }
+
+      if (before) {
+        params.expressionAttributeNames['#cursor'] = rangeKeyName;
+        params.expressionAttributeValues[':cursor'] = before;
+        const operator = sort === 'DESC' ? '>' : '<';
+        params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
+      }
       params.scanIndexForward = sort === 'DESC';
-      params.expressionAttributeNames['#cursor'] = rangeKeyName;
-      params.expressionAttributeValues[':cursor'] = before;
-      const operator = sort === 'DESC' ? '>' : '<';
-      params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
       params.limit = last;
     }
 
     return params;
   })();
 
-  const { items, lastEvaluatedKey } = await queryDynamoDB<T>({
+  const {
+    items,
+    lastEvaluatedKey,
+    consumedCapacity,
+    count,
+    scannedCount,
+  } = await queryDynamoDB<T>({
     credentials,
     region,
     tableName,
@@ -124,13 +149,13 @@ const paginate = async <T = any>({
     limit,
   });
 
-  // const edges = items;
-
-  const edges = items.sort(
-    (a: any, b: any) =>
-      (sort === 'ASC' ? 1 : -1) *
-      String(a[rangeKeyName]).localeCompare(String(b[rangeKeyName]))
-  );
+  const edges = items
+    .map(node => ({ cursor: (node as any)[rangeKeyName], node }))
+    .sort(
+      (a, b) =>
+        (sort === 'ASC' ? 1 : -1) *
+        String(a.cursor).localeCompare(String(b.cursor))
+    );
 
   const pageInfo: {
     hasPreviousPage: boolean;
@@ -146,32 +171,37 @@ const paginate = async <T = any>({
     };
 
     if (edges.length > 0) {
-      defaultPageInfo.startCursor = (edges[0] as any)[rangeKeyName];
-      defaultPageInfo.endCursor = (edges[edges.length - 1] as any)[
-        rangeKeyName
-      ];
+      defaultPageInfo.startCursor = edges[0].cursor;
+      defaultPageInfo.endCursor = edges[edges.length - 1].cursor;
     }
 
     if (after) {
       defaultPageInfo.hasPreviousPage = true;
+    }
 
-      if (lastEvaluatedKey) {
-        defaultPageInfo.hasNextPage = true;
-      }
+    if (lastEvaluatedKey && (after || first)) {
+      defaultPageInfo.hasNextPage = true;
     }
 
     if (before) {
       defaultPageInfo.hasNextPage = true;
+    }
 
-      if (lastEvaluatedKey) {
-        defaultPageInfo.hasPreviousPage = true;
-      }
+    if (lastEvaluatedKey && (before || last)) {
+      defaultPageInfo.hasPreviousPage = true;
     }
 
     return defaultPageInfo;
   })();
 
-  return { edges, pageInfo };
+  return {
+    edges,
+    pageInfo,
+    consumedCapacity,
+    count,
+    scannedCount,
+    lastEvaluatedKey,
+  };
 };
 
 export default paginate;

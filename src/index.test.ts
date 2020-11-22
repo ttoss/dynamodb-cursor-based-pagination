@@ -70,7 +70,7 @@ const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
       KeyConditionExpression: '#hashKey = :hashKey',
       IndexName: indexName,
       TableName: tableName,
-      ScanIndexForward: false,
+      ScanIndexForward: true,
     })
   ) {
     rangeKeySequence = [
@@ -110,18 +110,16 @@ const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
   };
 });
 
-if (!testAgainstRealTable) {
-  jest.mock('aws-sdk', () => {
-    return {
-      ...(jest.requireActual('aws-sdk') as any),
-      DynamoDB: {
-        DocumentClient: jest.fn(() => ({
-          query: mockDynamoDBQuery,
-        })),
-      },
-    };
-  });
-}
+jest.doMock('aws-sdk', () => {
+  return {
+    ...(jest.requireActual('aws-sdk') as any),
+    DynamoDBa: {
+      DocumentClient: jest.fn(() => ({
+        query: mockDynamoDBQuery,
+      })),
+    },
+  };
+});
 
 const defaultQueryParams = {
   credentials: testAgainstRealTable
@@ -140,7 +138,7 @@ const defaultQueryParams = {
 };
 
 /**
- * Wrap paginate and return only range key values.
+ * Wrap paginate and return only cursor (range key) values.
  */
 const testPaginate = async (
   params: Partial<Parameters<typeof paginate>[0]>
@@ -149,248 +147,344 @@ const testPaginate = async (
     ...defaultQueryParams,
     ...params,
   });
-  return { edges: edges.map((item: any) => item[rangeKeyName]), pageInfo };
+  return { edges: edges.map(({ cursor }) => cursor), pageInfo };
 };
 
-describe('ascendent sorting', () => {
-  const sort = 'ASC' as const;
-
-  describe('forward pagination', () => {
-    it('return no items because after-cursor is after last item', () => {
-      return expect(
-        testPaginate({ after: '2030-11-19T00:00:00.000Z', sort })
-      ).resolves.toEqual({
-        edges: [],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: true,
-        },
-      });
-    });
-
-    it('return items after after-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          after: '2020-11-19T06:00:00.000Z',
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T07:00:00.000Z',
-          '2020-11-19T08:00:00.000Z',
-          '2020-11-19T09:00:00.000Z',
-          '2020-11-19T10:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: true,
-          hasNextPage: false,
-          startCursor: '2020-11-19T07:00:00.000Z',
-          endCursor: '2020-11-19T10:00:00.000Z',
-        },
-      });
-    });
-
-    it('return first 3 items after after-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          after: '2020-11-19T06:00:00.000Z',
-          first: 3,
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T07:00:00.000Z',
-          '2020-11-19T08:00:00.000Z',
-          '2020-11-19T09:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: true,
-          hasNextPage: true,
-          startCursor: '2020-11-19T07:00:00.000Z',
-          endCursor: '2020-11-19T09:00:00.000Z',
-        },
-      });
-    });
+describe('errors', () => {
+  it('throw error if first is negative', () => {
+    return expect(testPaginate({ first: -1 })).rejects.toThrow();
   });
 
-  describe('backward pagination', () => {
-    it('return no items because before-cursor is before first item', () => {
-      return expect(
-        testPaginate({ before: '2010-11-19T00:00:00.000Z', sort })
-      ).resolves.toEqual({
-        edges: [],
-        pageInfo: {
-          hasNextPage: true,
-          hasPreviousPage: false,
-        },
-      });
-    });
-
-    it('return items before before-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          before: '2020-11-19T06:00:00.000Z',
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T00:00:00.000Z',
-          '2020-11-19T01:00:00.000Z',
-          '2020-11-19T02:00:00.000Z',
-          '2020-11-19T03:00:00.000Z',
-          '2020-11-19T04:00:00.000Z',
-          '2020-11-19T05:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: false,
-          hasNextPage: true,
-          startCursor: '2020-11-19T00:00:00.000Z',
-          endCursor: '2020-11-19T05:00:00.000Z',
-        },
-      });
-    });
-
-    it('return last 3 items before before-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          before: '2020-11-19T06:00:00.000Z',
-          last: 3,
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T03:00:00.000Z',
-          '2020-11-19T04:00:00.000Z',
-          '2020-11-19T05:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: true,
-          hasNextPage: true,
-          startCursor: '2020-11-19T03:00:00.000Z',
-          endCursor: '2020-11-19T05:00:00.000Z',
-        },
-      });
-    });
+  it('throw error if last is negative', () => {
+    return expect(testPaginate({ last: -1 })).rejects.toThrow();
   });
 });
 
-describe('descendent sorting', () => {
-  const sort = 'DESC' as const;
+describe('pagination', () => {
+  describe('ascendent sorting', () => {
+    const sort = 'ASC' as const;
 
-  describe('forward pagination', () => {
-    it('return no items because after-cursor is after last item', () => {
-      return expect(
-        testPaginate({ after: '2010-11-19T00:00:00.000Z', sort })
-      ).resolves.toEqual({
-        edges: [],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: true,
-        },
+    describe('forward pagination', () => {
+      it('return no items because after-cursor is after last item', () => {
+        return expect(
+          testPaginate({ after: '2030-11-19T00:00:00.000Z', sort })
+        ).resolves.toEqual({
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+          },
+        });
+      });
+
+      it('return first 3 items (after-cursor undefined)', () => {
+        return expect(
+          testPaginate({
+            sort,
+            first: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T00:00:00.000Z',
+            '2020-11-19T01:00:00.000Z',
+            '2020-11-19T02:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: '2020-11-19T00:00:00.000Z',
+            endCursor: '2020-11-19T02:00:00.000Z',
+          },
+        });
+      });
+
+      it('return items after after-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            after: '2020-11-19T06:00:00.000Z',
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T07:00:00.000Z',
+            '2020-11-19T08:00:00.000Z',
+            '2020-11-19T09:00:00.000Z',
+            '2020-11-19T10:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: '2020-11-19T07:00:00.000Z',
+            endCursor: '2020-11-19T10:00:00.000Z',
+          },
+        });
+      });
+
+      it('return first 3 items after after-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            after: '2020-11-19T06:00:00.000Z',
+            first: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T07:00:00.000Z',
+            '2020-11-19T08:00:00.000Z',
+            '2020-11-19T09:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: true,
+            startCursor: '2020-11-19T07:00:00.000Z',
+            endCursor: '2020-11-19T09:00:00.000Z',
+          },
+        });
       });
     });
 
-    it('return items after after-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          after: '2020-11-19T06:00:00.000Z',
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T05:00:00.000Z',
-          '2020-11-19T04:00:00.000Z',
-          '2020-11-19T03:00:00.000Z',
-          '2020-11-19T02:00:00.000Z',
-          '2020-11-19T01:00:00.000Z',
-          '2020-11-19T00:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: true,
-          hasNextPage: false,
-          startCursor: '2020-11-19T05:00:00.000Z',
-          endCursor: '2020-11-19T00:00:00.000Z',
-        },
+    describe('backward pagination', () => {
+      it('return no items because before-cursor is before first item', () => {
+        return expect(
+          testPaginate({ before: '2010-11-19T00:00:00.000Z', sort })
+        ).resolves.toEqual({
+          edges: [],
+          pageInfo: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+          },
+        });
       });
-    });
 
-    it('return first 3 items after after-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          after: '2020-11-19T06:00:00.000Z',
-          first: 3,
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T05:00:00.000Z',
-          '2020-11-19T04:00:00.000Z',
-          '2020-11-19T03:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: true,
-          hasNextPage: true,
-          startCursor: '2020-11-19T05:00:00.000Z',
-          endCursor: '2020-11-19T03:00:00.000Z',
-        },
+      it('return last 3 items (before-cursor undefined)', () => {
+        return expect(
+          testPaginate({
+            sort,
+            last: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T08:00:00.000Z',
+            '2020-11-19T09:00:00.000Z',
+            '2020-11-19T10:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: '2020-11-19T08:00:00.000Z',
+            endCursor: '2020-11-19T10:00:00.000Z',
+          },
+        });
+      });
+
+      it('return items before before-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            before: '2020-11-19T06:00:00.000Z',
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T00:00:00.000Z',
+            '2020-11-19T01:00:00.000Z',
+            '2020-11-19T02:00:00.000Z',
+            '2020-11-19T03:00:00.000Z',
+            '2020-11-19T04:00:00.000Z',
+            '2020-11-19T05:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: '2020-11-19T00:00:00.000Z',
+            endCursor: '2020-11-19T05:00:00.000Z',
+          },
+        });
+      });
+
+      it('return last 3 items before before-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            before: '2020-11-19T06:00:00.000Z',
+            last: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T03:00:00.000Z',
+            '2020-11-19T04:00:00.000Z',
+            '2020-11-19T05:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: true,
+            startCursor: '2020-11-19T03:00:00.000Z',
+            endCursor: '2020-11-19T05:00:00.000Z',
+          },
+        });
       });
     });
   });
 
-  describe('backward pagination', () => {
-    it('return no items because before-cursor is before first item', () => {
-      return expect(
-        testPaginate({ before: '2030-11-19T00:00:00.000Z', sort })
-      ).resolves.toEqual({
-        edges: [],
-        pageInfo: {
-          hasNextPage: true,
-          hasPreviousPage: false,
-        },
+  describe('descendent sorting', () => {
+    const sort = 'DESC' as const;
+
+    describe('forward pagination', () => {
+      it('return no items because after-cursor is after last item', () => {
+        return expect(
+          testPaginate({ after: '2010-11-19T00:00:00.000Z', sort })
+        ).resolves.toEqual({
+          edges: [],
+          pageInfo: {
+            hasNextPage: false,
+            hasPreviousPage: true,
+          },
+        });
+      });
+
+      it('return first 3 items (after-cursor undefined)', () => {
+        return expect(
+          testPaginate({
+            sort,
+            first: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T10:00:00.000Z',
+            '2020-11-19T09:00:00.000Z',
+            '2020-11-19T08:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: '2020-11-19T10:00:00.000Z',
+            endCursor: '2020-11-19T08:00:00.000Z',
+          },
+        });
+      });
+
+      it('return items after after-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            after: '2020-11-19T06:00:00.000Z',
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T05:00:00.000Z',
+            '2020-11-19T04:00:00.000Z',
+            '2020-11-19T03:00:00.000Z',
+            '2020-11-19T02:00:00.000Z',
+            '2020-11-19T01:00:00.000Z',
+            '2020-11-19T00:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: '2020-11-19T05:00:00.000Z',
+            endCursor: '2020-11-19T00:00:00.000Z',
+          },
+        });
+      });
+
+      it('return first 3 items after after-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            after: '2020-11-19T06:00:00.000Z',
+            first: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T05:00:00.000Z',
+            '2020-11-19T04:00:00.000Z',
+            '2020-11-19T03:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: true,
+            startCursor: '2020-11-19T05:00:00.000Z',
+            endCursor: '2020-11-19T03:00:00.000Z',
+          },
+        });
       });
     });
 
-    it('return items before before-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          before: '2020-11-19T06:00:00.000Z',
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T10:00:00.000Z',
-          '2020-11-19T09:00:00.000Z',
-          '2020-11-19T08:00:00.000Z',
-          '2020-11-19T07:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: false,
-          hasNextPage: true,
-          startCursor: '2020-11-19T10:00:00.000Z',
-          endCursor: '2020-11-19T07:00:00.000Z',
-        },
+    describe('backward pagination', () => {
+      it('return no items because before-cursor is before first item', () => {
+        return expect(
+          testPaginate({ before: '2030-11-19T00:00:00.000Z', sort })
+        ).resolves.toEqual({
+          edges: [],
+          pageInfo: {
+            hasNextPage: true,
+            hasPreviousPage: false,
+          },
+        });
       });
-    });
 
-    it('return last 3 items before before-cursor', () => {
-      return expect(
-        testPaginate({
-          sort,
-          before: '2020-11-19T06:00:00.000Z',
-          last: 3,
-        })
-      ).resolves.toEqual({
-        edges: [
-          '2020-11-19T09:00:00.000Z',
-          '2020-11-19T08:00:00.000Z',
-          '2020-11-19T07:00:00.000Z',
-        ],
-        pageInfo: {
-          hasPreviousPage: true,
-          hasNextPage: true,
-          startCursor: '2020-11-19T09:00:00.000Z',
-          endCursor: '2020-11-19T07:00:00.000Z',
-        },
+      it('return last 3 items (before-cursor undefined)', () => {
+        return expect(
+          testPaginate({
+            sort,
+            last: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T02:00:00.000Z',
+            '2020-11-19T01:00:00.000Z',
+            '2020-11-19T00:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: '2020-11-19T02:00:00.000Z',
+            endCursor: '2020-11-19T00:00:00.000Z',
+          },
+        });
+      });
+
+      it('return items before before-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            before: '2020-11-19T06:00:00.000Z',
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T10:00:00.000Z',
+            '2020-11-19T09:00:00.000Z',
+            '2020-11-19T08:00:00.000Z',
+            '2020-11-19T07:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: '2020-11-19T10:00:00.000Z',
+            endCursor: '2020-11-19T07:00:00.000Z',
+          },
+        });
+      });
+
+      it('return last 3 items before before-cursor', () => {
+        return expect(
+          testPaginate({
+            sort,
+            before: '2020-11-19T06:00:00.000Z',
+            last: 3,
+          })
+        ).resolves.toEqual({
+          edges: [
+            '2020-11-19T09:00:00.000Z',
+            '2020-11-19T08:00:00.000Z',
+            '2020-11-19T07:00:00.000Z',
+          ],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: true,
+            startCursor: '2020-11-19T09:00:00.000Z',
+            endCursor: '2020-11-19T07:00:00.000Z',
+          },
+        });
       });
     });
   });
