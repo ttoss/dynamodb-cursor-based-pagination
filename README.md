@@ -49,7 +49,7 @@ You also need install `aws-sdk` in your project because it is a peer dependency 
 ## How to Use
 
 ```
-import paginate from 'dynamodb-cursor-based-pagination';
+import { paginate } from 'dynamodb-cursor-based-pagination';
 ```
 
 `paginate` is a default exported method whose signature is:
@@ -94,7 +94,7 @@ If you don't have credentials in your environment, you may want provide them pas
 
 ```ts
 import { Credentials } from 'aws-sdk';
-import paginate from 'dynamodb-cursor-based-pagination';
+import { paginate } from 'dynamodb-cursor-based-pagination';
 
 const credentials = new Credentials({
   accessKeyId: ...,
