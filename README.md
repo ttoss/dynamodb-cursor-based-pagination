@@ -30,7 +30,9 @@ There aren't much requirements to achieve to be able to perform cursor-based pag
 1. A table or a secondary index with a [composite primary key](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html#HowItWorks.CoreComponents.PrimaryKey).
 1. Items must be saved in such way that the range key ordination must represent the ordination of the pagination.
 
-Let's study [some examples](examples/README.md) to understand better these requirements and the design.
+Why do we need the second requirement? First we need to understand what cursor is. Cursor is like an edge identifier, with cursor we must be able to retrieve and locate that edge on your backend. In a DBB table with composite primary key, the sort key is a good choice to be our cursor.
+
+Let's check [some examples](examples/README.md) to understand better these requirements and the design.
 
 ## Installation
 
@@ -45,6 +47,8 @@ Yarn:
 ```
 yarn add dynamodb-cursor-based-pagination
 ```
+
+You also need install `aws-sdk` in your project because it is a peer dependency of this project.
 
 ## Test
 

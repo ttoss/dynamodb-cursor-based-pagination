@@ -1,6 +1,9 @@
 import { DynamoDB, Credentials } from 'aws-sdk';
+import debug from 'debug';
 
 type Sort = 'ASC' | 'DESC';
+
+const logQueryParams = debug('queryParams');
 
 export const queryDynamoDB = async <T>({
   credentials,
@@ -36,6 +39,8 @@ export const queryDynamoDB = async <T>({
     ScanIndexForward: scanIndexForward,
     Limit: limit,
   };
+
+  logQueryParams(JSON.stringify(queryParams, null, 2));
 
   const {
     Items,
