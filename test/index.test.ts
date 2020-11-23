@@ -2,7 +2,7 @@ import { Credentials } from 'aws-sdk';
 import deepEqual from 'deep-equal';
 import faker from 'faker';
 
-import paginate from '../src';
+import { paginate } from '../src';
 
 require('dotenv').config();
 

@@ -64,7 +64,7 @@ export const queryDynamoDB = async <T>({
   };
 };
 
-const paginate = async <T = any>({
+export const paginate = async <T = any>({
   credentials,
   region,
   tableName,
@@ -210,5 +210,3 @@ const paginate = async <T = any>({
     lastEvaluatedKey,
   };
 };
-
-export default paginate;

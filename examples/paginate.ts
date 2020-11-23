@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import yargs from 'yargs';
 
-import paginate from '../src';
+import { paginate } from '../src';
 
 dotenv.config();
 
