@@ -4,6 +4,7 @@ import debug from 'debug';
 type Sort = 'ASC' | 'DESC';
 
 const logQueryParams = debug('queryParams');
+const logDynamoDBResponse = debug('dynamoDBResponse');
 
 export const queryDynamoDB = async <T>({
   credentials,
@@ -42,13 +43,17 @@ export const queryDynamoDB = async <T>({
 
   logQueryParams(JSON.stringify(queryParams, null, 2));
 
+  const response = await documentClient.query(queryParams).promise();
+
+  logDynamoDBResponse(JSON.stringify(response, null, 2));
+
   const {
     Items,
     LastEvaluatedKey,
     ConsumedCapacity,
     Count,
     ScannedCount,
-  } = await documentClient.query(queryParams).promise();
+  } = response;
 
   return {
     items: Items as T[],
@@ -59,9 +64,6 @@ export const queryDynamoDB = async <T>({
   };
 };
 
-/**
- * @see {@link https://relay.dev/graphql/connections.htm#}
- */
 const paginate = async <T = any>({
   credentials,
   region,

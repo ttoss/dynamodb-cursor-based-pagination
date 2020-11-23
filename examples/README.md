@@ -29,7 +29,7 @@ to execute the script `populateTable.ts` to create items whose range key values 
 
 ## Use Cases
 
-### Descendent Sorting
+### Descending Sorting
 
 #### Case 1 - `first: 3`
 
@@ -231,7 +231,7 @@ yarn run paginate --last=3 --before=cursor-15
 }
 ```
 
-### Ascendent Sorting
+### ascending Sorting
 
 #### Case 1 - `first: 3` and `sort: ASC`
 
