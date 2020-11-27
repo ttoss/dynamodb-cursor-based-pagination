@@ -120,9 +120,9 @@ The parameters `region`, `tableName`, `hashKeyName`, `hashKeyValue`, `rangeKeyNa
 
 Querying on DynamoBD is related to the sorting of the items in function of their sort key value. Because of this, the parameter `sort` defines the items order before perform pagination. `ASC` is for ascending sorting (`a`, `b`, ..., `z`) and `DESC`, for descending (`z`, `y`, ..., `a`).
 
-### beginsWith
+### Begins With
 
-- `sort: string | undefined`
+- `beginsWith: string | undefined`
 
 Your DynamoDB table may have an architecture that made the items have a [`beginsWith` property](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions). If you want to paginate over items that have such property, just add `beginsWith` to `paginate` method.
 
@@ -155,6 +155,7 @@ RANGE_KEY_NAME
 TABLE_NAME
 REGION
 INDEX_NAME
+BEGINS_WITH
 ```
 
 and remove the mocking from `src/index.test.ts`. I prefer changing the name of `DynamoDB` to any other name in this piece of code in `src/index.test.ts`:
