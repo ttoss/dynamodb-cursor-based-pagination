@@ -72,6 +72,7 @@ export const paginate = async <T = any>({
   hashKeyValue,
   rangeKeyName,
   indexName,
+  beginsWith = '',
   sort = 'DESC',
   after,
   first,
@@ -85,6 +86,7 @@ export const paginate = async <T = any>({
   hashKeyValue: string;
   rangeKeyName: string;
   indexName?: string;
+  beginsWith?: string;
   sort?: Sort;
   after?: string;
   before?: string;
@@ -113,10 +115,11 @@ export const paginate = async <T = any>({
 
       if (after) {
         params.expressionAttributeNames['#cursor'] = rangeKeyName;
-        params.expressionAttributeValues[':cursor'] = after;
+        params.expressionAttributeValues[':cursor'] = beginsWith + after;
         const operator = sort === 'ASC' ? '>' : '<';
         params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
       }
+
       params.scanIndexForward = sort === 'ASC';
       params.limit = first;
     } else if (before || last) {
@@ -126,10 +129,11 @@ export const paginate = async <T = any>({
 
       if (before) {
         params.expressionAttributeNames['#cursor'] = rangeKeyName;
-        params.expressionAttributeValues[':cursor'] = before;
+        params.expressionAttributeValues[':cursor'] = beginsWith + before;
         const operator = sort === 'DESC' ? '>' : '<';
         params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
       }
+
       params.scanIndexForward = sort === 'DESC';
       params.limit = last;
     }
@@ -156,8 +160,14 @@ export const paginate = async <T = any>({
     limit,
   });
 
+  const replacerRegex = new RegExp(`^${beginsWith}`);
+
   const edges = items
-    .map(node => ({ cursor: (node as any)[rangeKeyName], node }))
+    .filter(node => String((node as any)[rangeKeyName]).startsWith(beginsWith))
+    .map(node => ({
+      cursor: String((node as any)[rangeKeyName]).replace(replacerRegex, ''),
+      node,
+    }))
     .sort(
       (a, b) =>
         (sort === 'ASC' ? 1 : -1) *
@@ -173,8 +183,8 @@ export const paginate = async <T = any>({
     const defaultPageInfo = {
       hasPreviousPage: false,
       hasNextPage: false,
-      startCursor: undefined,
-      endCursor: undefined,
+      startCursor: undefined as undefined | string,
+      endCursor: undefined as undefined | string,
     };
 
     if (edges.length > 0) {
@@ -186,15 +196,21 @@ export const paginate = async <T = any>({
       defaultPageInfo.hasPreviousPage = true;
     }
 
-    if (lastEvaluatedKey && (after || first)) {
-      defaultPageInfo.hasNextPage = true;
-    }
-
     if (before) {
       defaultPageInfo.hasNextPage = true;
     }
 
-    if (lastEvaluatedKey && (before || last)) {
+    /**
+     * If edges was filtered, means that more items was returned that the only
+     * ones that starts with beginsWith, then there are next/previous page.
+     */
+    const edgesWasFiltered = edges.length !== items.length;
+
+    if (lastEvaluatedKey && !edgesWasFiltered && (after || first)) {
+      defaultPageInfo.hasNextPage = true;
+    }
+
+    if (lastEvaluatedKey && !edgesWasFiltered && (before || last)) {
       defaultPageInfo.hasPreviousPage = true;
     }
 

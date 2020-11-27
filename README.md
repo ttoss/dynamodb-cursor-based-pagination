@@ -56,28 +56,29 @@ import { paginate } from 'dynamodb-cursor-based-pagination';
 
 ```
 const paginate: <T = any>(params: {
-    credentials?: Credentials | undefined;
+    credentials?: Credentials;
     region: string;
     tableName: string;
     hashKeyName: string;
     hashKeyValue: string;
     rangeKeyName: string;
-    indexName?: string | undefined;
-    sort?: "ASC" | "DESC" | undefined;
-    after?: string | undefined;
-    before?: string | undefined;
-    first?: number | undefined;
-    last?: number | undefined;
+    indexName?: string;
+    beginsWith?: string;
+    sort?: "ASC" | "DESC";
+    after?: string;
+    before?: string;
+    first?: number;
+    last?: number;
 }) => Promise<{
     edges: {
-        cursor: any;
+        cursor: string;
         node: T;
     }[];
     pageInfo: {
         hasPreviousPage: boolean;
         hasNextPage: boolean;
-        startCursor?: string | undefined;
-        endCursor?: string | undefined;
+        startCursor?: string;
+        endCursor?: string;
     };
     consumedCapacity: DynamoDB.DocumentClient.ConsumedCapacity | undefined;
     count: number | undefined;
@@ -118,6 +119,12 @@ The parameters `region`, `tableName`, `hashKeyName`, `hashKeyValue`, `rangeKeyNa
 - `sort: 'ASC' | 'DESC' (default 'DESC')`
 
 Querying on DynamoBD is related to the sorting of the items in function of their sort key value. Because of this, the parameter `sort` defines the items order before perform pagination. `ASC` is for ascending sorting (`a`, `b`, ..., `z`) and `DESC`, for descending (`z`, `y`, ..., `a`).
+
+### beginsWith
+
+- `sort: string | undefined`
+
+Your DynamoDB table may have an architecture that made the items have a [`beginsWith` property](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions). If you want to paginate over items that have such property, just add `beginsWith` to `paginate` method.
 
 ### Cursor Parameters
 

@@ -208,6 +208,55 @@ const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
     },
     {
       matcher: {
+        cursor: 'cursor-25',
+        limit: 6,
+        scanIndexForward: true,
+        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
+      },
+      response: {
+        Items: [
+          {
+            id: 'cursor-26',
+            [rangeKeyName]: 'cursor-26',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-27',
+            [rangeKeyName]: 'cursor-27',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-28',
+            [rangeKeyName]: 'cursor-28',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-29',
+            [rangeKeyName]: 'cursor-29',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-30',
+            [rangeKeyName]: 'cursor-30',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-31',
+            [rangeKeyName]: 'cursor-31',
+            [hashKeyName]: hashKeyValue,
+          },
+        ],
+        Count: 6,
+        ScannedCount: 6,
+        LastEvaluatedKey: {
+          id: 'cursor-31',
+          [rangeKeyName]: 'cursor-31',
+          [hashKeyName]: hashKeyValue,
+        },
+      },
+    },
+    {
+      matcher: {
         cursor: 'cursor-09',
         scanIndexForward: false,
         keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
@@ -354,6 +403,55 @@ const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
     },
     {
       matcher: {
+        cursor: 'cursor-25',
+        limit: 6,
+        scanIndexForward: false,
+        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
+      },
+      response: {
+        Items: [
+          {
+            id: 'cursor-24',
+            [rangeKeyName]: 'cursor-24',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-23',
+            [rangeKeyName]: 'cursor-23',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-22',
+            [rangeKeyName]: 'cursor-22',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-21',
+            [rangeKeyName]: 'cursor-21',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-20',
+            [rangeKeyName]: 'cursor-20',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-19',
+            [rangeKeyName]: 'cursor-19',
+            [hashKeyName]: hashKeyValue,
+          },
+        ],
+        Count: 6,
+        ScannedCount: 6,
+        LastEvaluatedKey: {
+          id: 'cursor-19',
+          [rangeKeyName]: 'cursor-19',
+          [hashKeyName]: hashKeyValue,
+        },
+      },
+    },
+    {
+      matcher: {
         cursor: 'cursor-09',
         scanIndexForward: false,
         keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
@@ -471,6 +569,55 @@ const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
     },
     {
       matcher: {
+        cursor: 'cursor-25',
+        limit: 6,
+        scanIndexForward: false,
+        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
+      },
+      response: {
+        Items: [
+          {
+            id: 'cursor-24',
+            [rangeKeyName]: 'cursor-24',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-23',
+            [rangeKeyName]: 'cursor-23',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-22',
+            [rangeKeyName]: 'cursor-22',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-21',
+            [rangeKeyName]: 'cursor-21',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-20',
+            [rangeKeyName]: 'cursor-20',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-19',
+            [rangeKeyName]: 'cursor-19',
+            [hashKeyName]: hashKeyValue,
+          },
+        ],
+        Count: 6,
+        ScannedCount: 6,
+        LastEvaluatedKey: {
+          id: 'cursor-19',
+          [rangeKeyName]: 'cursor-19',
+          [hashKeyName]: hashKeyValue,
+        },
+      },
+    },
+    {
+      matcher: {
         cursor: 'cursor-35',
         scanIndexForward: true,
         keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
@@ -572,6 +719,55 @@ const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
         LastEvaluatedKey: {
           id: 'cursor-33',
           [rangeKeyName]: 'cursor-33',
+          [hashKeyName]: hashKeyValue,
+        },
+      },
+    },
+    {
+      matcher: {
+        cursor: 'cursor-25',
+        limit: 6,
+        scanIndexForward: true,
+        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
+      },
+      response: {
+        Items: [
+          {
+            id: 'cursor-26',
+            [rangeKeyName]: 'cursor-26',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-27',
+            [rangeKeyName]: 'cursor-27',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-28',
+            [rangeKeyName]: 'cursor-28',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-29',
+            [rangeKeyName]: 'cursor-29',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-30',
+            [rangeKeyName]: 'cursor-30',
+            [hashKeyName]: hashKeyValue,
+          },
+          {
+            id: 'cursor-31',
+            [rangeKeyName]: 'cursor-31',
+            [hashKeyName]: hashKeyValue,
+          },
+        ],
+        Count: 6,
+        ScannedCount: 6,
+        LastEvaluatedKey: {
+          id: 'cursor-31',
+          [rangeKeyName]: 'cursor-31',
           [hashKeyName]: hashKeyValue,
         },
       },
@@ -733,6 +929,25 @@ describe('pagination', () => {
           },
         });
       });
+
+      it('when beginsWith=cursor-2, after=5 and first=6, return hasNextPage=false because items were filtered', () => {
+        return expect(
+          testPaginate({
+            sort,
+            beginsWith: 'cursor-2',
+            after: '5',
+            first: 6,
+          })
+        ).resolves.toEqual({
+          edges: ['6', '7', '8', '9'],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: '6',
+            endCursor: '9',
+          },
+        });
+      });
     });
 
     describe('backward pagination', () => {
@@ -824,6 +1039,25 @@ describe('pagination', () => {
           },
         });
       });
+
+      it('when beginsWith=cursor-2, before=5 and last=6, return hasPreviousPage=false because items were filtered', () => {
+        return expect(
+          testPaginate({
+            sort,
+            beginsWith: 'cursor-2',
+            before: '5',
+            last: 6,
+          })
+        ).resolves.toEqual({
+          edges: ['0', '1', '2', '3', '4'],
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: '0',
+            endCursor: '4',
+          },
+        });
+      });
     });
   });
 
@@ -900,6 +1134,25 @@ describe('pagination', () => {
           },
         });
       });
+
+      it('when beginsWith=cursor-2, after=5 and first=6, return hasNextPage=false because items were filtered', () => {
+        return expect(
+          testPaginate({
+            sort,
+            beginsWith: 'cursor-2',
+            after: '5',
+            first: 6,
+          })
+        ).resolves.toEqual({
+          edges: ['4', '3', '2', '1', '0'],
+          pageInfo: {
+            hasPreviousPage: true,
+            hasNextPage: false,
+            startCursor: '4',
+            endCursor: '0',
+          },
+        });
+      });
     });
 
     describe('backward pagination', () => {
@@ -963,6 +1216,25 @@ describe('pagination', () => {
             hasNextPage: true,
             startCursor: 'cursor-33',
             endCursor: 'cursor-31',
+          },
+        });
+      });
+
+      it('when beginsWith=cursor-2, before=5 and last=6, return hasPreviousPage=false because items was filtered', () => {
+        return expect(
+          testPaginate({
+            sort,
+            beginsWith: 'cursor-2',
+            before: '5',
+            last: 6,
+          })
+        ).resolves.toEqual({
+          edges: ['9', '8', '7', '6'],
+          pageInfo: {
+            hasPreviousPage: false,
+            hasNextPage: true,
+            startCursor: '9',
+            endCursor: '6',
           },
         });
       });

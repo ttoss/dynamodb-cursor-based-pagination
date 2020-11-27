@@ -29,6 +29,8 @@ to execute the script `populateTable.ts` to create items whose range key values 
 
 ## Use Cases
 
+Check the tests case to see more examples.
+
 ### Descending Sorting
 
 #### Case 1 - `first: 3`
@@ -41,7 +43,7 @@ to execute the script `populateTable.ts` to create items whose range key values 
 
 - Query Parameters
 
-```
+```json
 {
   "ExpressionAttributeNames": {
     "#hashKey": HASH_KEY_NAME
@@ -59,7 +61,7 @@ to execute the script `populateTable.ts` to create items whose range key values 
 
 - Response
 
-```
+```json
 {
   "edges": [
     {
@@ -109,7 +111,7 @@ to execute the script `populateTable.ts` to create items whose range key values 
 
 - Query Parameters
 
-```
+```json
 {
   "ExpressionAttributeNames": {
     "#hashKey": HASH_KEY_NAME,
@@ -129,7 +131,7 @@ to execute the script `populateTable.ts` to create items whose range key values 
 
 - Response
 
-```
+```json
 {
   "edges": [
     {
@@ -171,7 +173,7 @@ yarn run paginate --last=3 --before=cursor-15
 
 - Query Parameters
 
-```
+```json
 {
   "ExpressionAttributeNames": {
     "#hashKey": HASH_KEY_NAME,
@@ -191,7 +193,7 @@ yarn run paginate --last=3 --before=cursor-15
 
 - Response
 
-```
+```json
 {
   "edges": [
     {
@@ -231,7 +233,85 @@ yarn run paginate --last=3 --before=cursor-15
 }
 ```
 
-### ascending Sorting
+#### Case 4 - `last: 4`, `before: 5` AND `beginsWith: cursor-1`
+
+- Command
+
+```
+yarn run paginate --last=7 --before=5 --beginsWith=cursor-1
+```
+
+- Query Parameters
+
+```json
+{
+  "ExpressionAttributeNames": {
+    "#hashKey": HASH_KEY_NAME,
+    "#cursor": RANGE_KEY_NAME
+  },
+  "ExpressionAttributeValues": {
+    ":hashKey": HASH_KEY_VALUE,
+    ":cursor": "cursor-15"
+  },
+  "KeyConditionExpression": "#hashKey = :hashKey AND #cursor > :cursor",
+  "IndexName": INDEX_NAME,
+  "TableName": TABLE_NAME,
+  "ScanIndexForward": true,
+  "Limit": 7
+}
+```
+
+- Response
+
+```json
+{
+  "edges": [
+    {
+      "cursor": "9",
+      "node": {
+        "id": "cursor-19",
+        [RANGE_KEY_NAME]: "cursor-19",
+        [HASH_KEY_NAME]: HASH_KEY_VALUE
+      }
+    },
+    {
+      "cursor": "8",
+      "node": {
+        "id": "cursor-18",
+        [RANGE_KEY_NAME]: "cursor-18",
+        [HASH_KEY_NAME]: HASH_KEY_VALUE
+      }
+    },
+    {
+      "cursor": "7",
+      "node": {
+        "id": "cursor-17",
+        [RANGE_KEY_NAME]: "cursor-17",
+        [HASH_KEY_NAME]: HASH_KEY_VALUE
+      }
+    },
+    {
+      "cursor": "6",
+      "node": {
+        "id": "cursor-16",
+        [RANGE_KEY_NAME]: "cursor-16",
+        [HASH_KEY_NAME]: HASH_KEY_VALUE
+      }
+    }
+  ],
+  "pageInfo": {
+    "hasPreviousPage": false,
+    "hasNextPage": true,
+    "startCursor": "9",
+    "endCursor": "6"
+  },
+  "count": 7,
+  "scannedCount": 7,
+  "lastEvaluatedKey": "cursor-22"
+}
+```
+
+### Ascending Sorting
 
 #### Case 1 - `first: 3` and `sort: ASC`
 
@@ -243,7 +323,7 @@ yarn run paginate --first=3 --sort=ASC
 
 - Query Parameters
 
-```
+```json
 {
   "ExpressionAttributeNames": {
     "#hashKey": HASH_KEY_NAME
@@ -261,7 +341,7 @@ yarn run paginate --first=3 --sort=ASC
 
 - Response
 
-```
+```json
 {
   "edges": [
     {
@@ -311,7 +391,7 @@ yarn run paginate --first=2 --after=cursor-30 --sort=ASC
 
 - Query Parameters
 
-```
+```json
 {
   "ExpressionAttributeNames": {
     "#hashKey": HASH_KEY_NAME,
@@ -331,7 +411,7 @@ yarn run paginate --first=2 --after=cursor-30 --sort=ASC
 
 - Response
 
-```
+```json
 {
   "edges": [
     {
@@ -368,12 +448,12 @@ yarn run paginate --first=2 --after=cursor-30 --sort=ASC
 - Command
 
 ```
-yarn run paginate --last=3 --before=cursor-15
+yarn run paginate --last=3 --before=cursor-15 --sort=ASC
 ```
 
 - Query Parameters
 
-```
+```json
 {
   "ExpressionAttributeNames": {
     "#hashKey": HASH_KEY_NAME,
@@ -393,7 +473,7 @@ yarn run paginate --last=3 --before=cursor-15
 
 - Response
 
-```
+```json
 {
   "edges": [
     {

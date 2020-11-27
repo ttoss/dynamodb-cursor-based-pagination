@@ -14,7 +14,7 @@ const {
   INDEX_NAME,
 } = process.env;
 
-const { after, first, before, last, sort }: any = yargs.argv;
+const { after, first, before, last, sort, beginsWith }: any = yargs.argv;
 
 paginate({
   region: REGION,
@@ -23,6 +23,7 @@ paginate({
   hashKeyValue: HASH_KEY_VALUE,
   rangeKeyName: RANGE_KEY_NAME,
   indexName: INDEX_NAME,
+  beginsWith,
   sort,
   after,
   first,
