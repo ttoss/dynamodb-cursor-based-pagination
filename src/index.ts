@@ -1,10 +1,10 @@
 import { DynamoDB, Credentials } from 'aws-sdk';
-import debug from 'debug';
+// import debug from 'debug';
 
 type Sort = 'ASC' | 'DESC';
 
-const logQueryParams = debug('queryParams');
-const logDynamoDBResponse = debug('dynamoDBResponse');
+// const logQueryParams = debug('queryParams');
+// const logDynamoDBResponse = debug('dynamoDBResponse');
 
 export const queryDynamoDB = async <T>({
   credentials,
@@ -41,11 +41,11 @@ export const queryDynamoDB = async <T>({
     Limit: limit,
   };
 
-  logQueryParams(JSON.stringify(queryParams, null, 2));
+  // logQueryParams(JSON.stringify(queryParams, null, 2));
 
   const response = await documentClient.query(queryParams).promise();
 
-  logDynamoDBResponse(JSON.stringify(response, null, 2));
+  // logDynamoDBResponse(JSON.stringify(response, null, 2));
 
   const {
     Items,
