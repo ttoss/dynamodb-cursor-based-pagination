@@ -196,13 +196,13 @@ Let's check [some examples](examples/README.md) to understand better [these requ
 
 ## Test
 
-To perform test mocking the DynamoDB API, run:
+To test against a real table:
 
 ```
 yarn run test
 ```
 
-If you want to test against a real table, provide these values in your environment - you may want provide them in a `.env` file:
+To test against a real table, provide these values in your environment - you may want provide them in a `.env` file:
 
 ```
 AWS_ACCESS_KEY_ID
@@ -217,23 +217,7 @@ INDEX_NAME
 BEGINS_WITH
 ```
 
-and remove the mocking from `src/index.test.ts`. I prefer changing the name of `DynamoDB` to any other name in this piece of code in `src/index.test.ts`:
-
-```ts
-jest.mock('aws-sdk', () => {
-  return {
-    ...(jest.requireActual('aws-sdk') as any),
-    // DynamoDB: {
-    DynamoDBAA: {
-      DocumentClient: jest.fn(() => ({
-        query: mockDynamoDBQuery,
-      })),
-    },
-  };
-});
-```
-
-Also, you need to populate the table with data to be tested. Please, refer to [this section](examples/README.md#populate-dbb-table) to add data to the table.
+Also, you need to populate the table with data to be tested. Please, refer to [this section](test/README.md#populate-dbb-table) to add data to the table.
 
 ## Author
 
