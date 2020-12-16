@@ -1,8 +1,9 @@
 import { Credentials } from 'aws-sdk';
-import deepEqual from 'deep-equal';
 import faker from 'faker';
 
 import { paginate } from '../src';
+
+import { NUMBER_OF_ITEMS } from './config';
 
 require('dotenv').config();
 
@@ -31,778 +32,9 @@ const testAgainstRealTable =
 const hashKeyName = HASH_KEY_NAME || faker.random.word();
 const hashKeyValue = HASH_KEY_VALUE || faker.random.word();
 const rangeKeyName = RANGE_KEY_NAME || faker.random.word();
-const indexName = INDEX_NAME || faker.random.word();
+const indexName = INDEX_NAME;
 const tableName = TABLE_NAME || faker.random.word();
 const region = REGION || 'us-east-1';
-
-/**
- * Created as the result of a real table query.
- */
-const mockDynamoDBQuery = jest.fn().mockImplementation(queryParams => {
-  const getRangeKeySequenceByQueryParams = ({
-    matcher: { cursor, keyConditionExpression, scanIndexForward, limit },
-    response,
-  }: {
-    matcher: {
-      cursor?: string;
-      keyConditionExpression: string;
-      scanIndexForward: boolean;
-      limit?: number;
-    };
-    response: any;
-  }) => {
-    const queryParamsToCompare: any = {
-      ExpressionAttributeNames: { '#hashKey': hashKeyName },
-      ExpressionAttributeValues: { ':hashKey': hashKeyValue },
-      KeyConditionExpression: keyConditionExpression,
-      IndexName: indexName,
-      TableName: tableName,
-      ScanIndexForward: scanIndexForward,
-      Limit: limit || undefined,
-    };
-
-    if (cursor) {
-      queryParamsToCompare.ExpressionAttributeNames['#cursor'] = rangeKeyName;
-      queryParamsToCompare.ExpressionAttributeValues[':cursor'] = cursor;
-    }
-
-    return deepEqual(queryParams, queryParamsToCompare) ? response : undefined;
-  };
-
-  const response = [
-    {
-      matcher: {
-        cursor: 'cursor-35',
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [],
-        Count: 0,
-        ScannedCount: 0,
-      },
-    },
-    {
-      matcher: {
-        limit: 3,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-10',
-            [rangeKeyName]: 'cursor-10',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-11',
-            [rangeKeyName]: 'cursor-11',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-12',
-            [rangeKeyName]: 'cursor-12',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-12',
-          [rangeKeyName]: 'cursor-12',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-30',
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-31',
-            [rangeKeyName]: 'cursor-31',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-32',
-            [rangeKeyName]: 'cursor-32',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-33',
-            [rangeKeyName]: 'cursor-33',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-34',
-            [rangeKeyName]: 'cursor-34',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 4,
-        ScannedCount: 4,
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-20',
-        limit: 3,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-21',
-            [rangeKeyName]: 'cursor-21',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-22',
-            [rangeKeyName]: 'cursor-22',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-23',
-            [rangeKeyName]: 'cursor-23',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-23',
-          [rangeKeyName]: 'cursor-23',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-32',
-        limit: 10,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-33',
-            [rangeKeyName]: 'cursor-33',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-34',
-            [rangeKeyName]: 'cursor-34',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 2,
-        ScannedCount: 2,
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-25',
-        limit: 6,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-26',
-            [rangeKeyName]: 'cursor-26',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-27',
-            [rangeKeyName]: 'cursor-27',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-28',
-            [rangeKeyName]: 'cursor-28',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-29',
-            [rangeKeyName]: 'cursor-29',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-30',
-            [rangeKeyName]: 'cursor-30',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-31',
-            [rangeKeyName]: 'cursor-31',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 6,
-        ScannedCount: 6,
-        LastEvaluatedKey: {
-          id: 'cursor-31',
-          [rangeKeyName]: 'cursor-31',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-09',
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [],
-        Count: 0,
-        ScannedCount: 0,
-      },
-    },
-    {
-      matcher: {
-        limit: 3,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-34',
-            [rangeKeyName]: 'cursor-34',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-33',
-            [rangeKeyName]: 'cursor-33',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-32',
-            [rangeKeyName]: 'cursor-32',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-32',
-          [rangeKeyName]: 'cursor-32',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-16',
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-15',
-            [rangeKeyName]: 'cursor-15',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-14',
-            [rangeKeyName]: 'cursor-14',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-13',
-            [rangeKeyName]: 'cursor-13',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-12',
-            [rangeKeyName]: 'cursor-12',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-11',
-            [rangeKeyName]: 'cursor-11',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-10',
-            [rangeKeyName]: 'cursor-10',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 6,
-        ScannedCount: 6,
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-16',
-        limit: 3,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-15',
-            [rangeKeyName]: 'cursor-15',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-14',
-            [rangeKeyName]: 'cursor-14',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-13',
-            [rangeKeyName]: 'cursor-13',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-13',
-          [rangeKeyName]: 'cursor-13',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-12',
-        limit: 10,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-11',
-            [rangeKeyName]: 'cursor-11',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-10',
-            [rangeKeyName]: 'cursor-10',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 2,
-        ScannedCount: 2,
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-25',
-        limit: 6,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-24',
-            [rangeKeyName]: 'cursor-24',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-23',
-            [rangeKeyName]: 'cursor-23',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-22',
-            [rangeKeyName]: 'cursor-22',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-21',
-            [rangeKeyName]: 'cursor-21',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-20',
-            [rangeKeyName]: 'cursor-20',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-19',
-            [rangeKeyName]: 'cursor-19',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 6,
-        ScannedCount: 6,
-        LastEvaluatedKey: {
-          id: 'cursor-19',
-          [rangeKeyName]: 'cursor-19',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-09',
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [],
-        Count: 0,
-        ScannedCount: 0,
-      },
-    },
-    {
-      matcher: {
-        limit: 3,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-34',
-            [rangeKeyName]: 'cursor-34',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-33',
-            [rangeKeyName]: 'cursor-33',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-32',
-            [rangeKeyName]: 'cursor-32',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-32',
-          [rangeKeyName]: 'cursor-32',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-15',
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-14',
-            [rangeKeyName]: 'cursor-14',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-13',
-            [rangeKeyName]: 'cursor-13',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-12',
-            [rangeKeyName]: 'cursor-12',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-11',
-            [rangeKeyName]: 'cursor-11',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-10',
-            [rangeKeyName]: 'cursor-10',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 5,
-        ScannedCount: 5,
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-14',
-        limit: 3,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-13',
-            [rangeKeyName]: 'cursor-13',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-12',
-            [rangeKeyName]: 'cursor-12',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-11',
-            [rangeKeyName]: 'cursor-11',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-11',
-          [rangeKeyName]: 'cursor-11',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-25',
-        limit: 6,
-        scanIndexForward: false,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor < :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-24',
-            [rangeKeyName]: 'cursor-24',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-23',
-            [rangeKeyName]: 'cursor-23',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-22',
-            [rangeKeyName]: 'cursor-22',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-21',
-            [rangeKeyName]: 'cursor-21',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-20',
-            [rangeKeyName]: 'cursor-20',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-19',
-            [rangeKeyName]: 'cursor-19',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 6,
-        ScannedCount: 6,
-        LastEvaluatedKey: {
-          id: 'cursor-19',
-          [rangeKeyName]: 'cursor-19',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-35',
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [],
-        Count: 0,
-        ScannedCount: 0,
-      },
-    },
-    {
-      matcher: {
-        limit: 3,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-10',
-            [rangeKeyName]: 'cursor-10',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-11',
-            [rangeKeyName]: 'cursor-11',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-12',
-            [rangeKeyName]: 'cursor-12',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-12',
-          [rangeKeyName]: 'cursor-12',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-31',
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-32',
-            [rangeKeyName]: 'cursor-32',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-33',
-            [rangeKeyName]: 'cursor-33',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-34',
-            [rangeKeyName]: 'cursor-34',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-30',
-        limit: 3,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-31',
-            [rangeKeyName]: 'cursor-31',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-32',
-            [rangeKeyName]: 'cursor-32',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-33',
-            [rangeKeyName]: 'cursor-33',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 3,
-        ScannedCount: 3,
-        LastEvaluatedKey: {
-          id: 'cursor-33',
-          [rangeKeyName]: 'cursor-33',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-    {
-      matcher: {
-        cursor: 'cursor-25',
-        limit: 6,
-        scanIndexForward: true,
-        keyConditionExpression: '#hashKey = :hashKey AND #cursor > :cursor',
-      },
-      response: {
-        Items: [
-          {
-            id: 'cursor-26',
-            [rangeKeyName]: 'cursor-26',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-27',
-            [rangeKeyName]: 'cursor-27',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-28',
-            [rangeKeyName]: 'cursor-28',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-29',
-            [rangeKeyName]: 'cursor-29',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-30',
-            [rangeKeyName]: 'cursor-30',
-            [hashKeyName]: hashKeyValue,
-          },
-          {
-            id: 'cursor-31',
-            [rangeKeyName]: 'cursor-31',
-            [hashKeyName]: hashKeyValue,
-          },
-        ],
-        Count: 6,
-        ScannedCount: 6,
-        LastEvaluatedKey: {
-          id: 'cursor-31',
-          [rangeKeyName]: 'cursor-31',
-          [hashKeyName]: hashKeyValue,
-        },
-      },
-    },
-  ].reduce<any | undefined>((acc, input) => {
-    return acc || getRangeKeySequenceByQueryParams(input);
-  }, undefined);
-
-  if (!response) {
-    throw new Error(
-      `response is not defined when queryParams is: \n ${JSON.stringify(
-        queryParams,
-        null,
-        2
-      )}`
-    );
-  }
-
-  return {
-    promise: () => {
-      return Promise.resolve(response);
-    },
-  };
-});
-
-jest.mock('aws-sdk', () => {
-  return {
-    ...(jest.requireActual('aws-sdk') as any),
-    DynamoDB: {
-      DocumentClient: jest.fn(() => ({
-        query: mockDynamoDBQuery,
-      })),
-    },
-  };
-});
 
 const defaultQueryParams = {
   credentials: testAgainstRealTable
@@ -844,6 +76,17 @@ describe('errors', () => {
 });
 
 describe('pagination', () => {
+  test('default args', async () => {
+    const response = await testPaginate({});
+    expect(response.edges.length).toEqual(NUMBER_OF_ITEMS);
+    expect(response.pageInfo).toEqual({
+      hasPreviousPage: false,
+      hasNextPage: false,
+      startCursor: 'cursor-34',
+      endCursor: 'cursor-10',
+    });
+  });
+
   describe('ascending sorting', () => {
     const sort = 'ASC' as const;
 
@@ -1239,5 +482,66 @@ describe('pagination', () => {
         });
       });
     });
+  });
+});
+
+describe('projection expression', () => {
+  const first = 1;
+  test('return only hashKey', async () => {
+    const response = await paginate({
+      ...defaultQueryParams,
+      first,
+      projectionExpression: hashKeyName,
+    });
+    expect(Object.keys(response.edges[0].node)).toEqual([hashKeyName]);
+  });
+
+  test('return only hashKey and rangeKey', async () => {
+    const response = await paginate({
+      ...defaultQueryParams,
+      first,
+      projectionExpression: [hashKeyName, rangeKeyName].join(','),
+    });
+    expect(Object.keys(response.edges[0].node).sort()).toEqual(
+      [hashKeyName, rangeKeyName].sort()
+    );
+  });
+});
+
+describe('filters', () => {
+  test('return only items whose cursor > 20', async () => {
+    const { pageInfo } = await paginate({
+      ...defaultQueryParams,
+      filterExpression: '#index > :index',
+      filterAttributeNames: {
+        '#index': 'index',
+      },
+      filterAttributeValues: {
+        ':index': 20,
+      },
+    });
+    expect(pageInfo).toEqual(
+      expect.objectContaining({
+        startCursor: 'cursor-34',
+        endCursor: 'cursor-21',
+      })
+    );
+  });
+
+  test('return only even cursors', async () => {
+    const { edges } = await paginate({
+      ...defaultQueryParams,
+      filterExpression: '#parity = :parity',
+      filterAttributeNames: {
+        '#parity': 'parity',
+      },
+      filterAttributeValues: {
+        ':parity': 'EVEN',
+      },
+    });
+    const parityValues = Array.from(
+      new Set<{ parity: string }>(edges.map(({ node }) => node.parity))
+    );
+    expect(parityValues).toEqual(['EVEN']);
   });
 });

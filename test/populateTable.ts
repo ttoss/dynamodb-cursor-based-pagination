@@ -1,6 +1,8 @@
 import { DynamoDB } from 'aws-sdk';
 import dotenv from 'dotenv';
 
+import { NUMBER_OF_ITEMS } from './config';
+
 dotenv.config();
 
 const {
@@ -13,15 +15,17 @@ const {
 
 const documentClient = new DynamoDB.DocumentClient({ region: REGION });
 
-const items = [...new Array(25)].map((_, index) => {
+const items = [...new Array(NUMBER_OF_ITEMS)].map((_, index) => {
   /**
    * +10 to create id with same string length.
    */
-  const id = `cursor-${index + 10}`;
+  const newIndex = index + 10;
+  const rangeKeyValue = `cursor-${newIndex}`;
   return {
-    id,
     [HASH_KEY_NAME]: HASH_KEY_VALUE,
-    [RANGE_KEY_NAME]: id,
+    [RANGE_KEY_NAME]: rangeKeyValue,
+    index: newIndex,
+    parity: newIndex & 1 ? 'ODD' : 'EVEN',
   };
 });
 

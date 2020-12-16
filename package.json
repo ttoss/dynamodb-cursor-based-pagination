@@ -19,8 +19,8 @@
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
-    "populate-table": "npx ts-node -T -O '{\"module\": \"commonjs\"}' examples/populateTable.ts",
-    "paginate": "DEBUG=* npx ts-node -T -O '{\"module\": \"commonjs\"}' examples/paginate.ts"
+    "populate-table": "npx ts-node -T -O '{\"module\": \"commonjs\"}' test/populateTable.ts",
+    "paginate": "npx ts-node -T -O '{\"module\": \"commonjs\"}' examples/paginate.ts"
   },
   "peerDependencies": {
     "aws-sdk": "^2.796.0"
@@ -54,12 +54,8 @@
   ],
   "devDependencies": {
     "@size-limit/preset-small-lib": "^4.8.0",
-    "@types/debug": "^4.1.5",
-    "@types/deep-equal": "^1.0.1",
     "@types/faker": "^5.1.4",
     "aws-sdk": "^2.797.0",
-    "debug": "^4.3.1",
-    "deep-equal": "^2.0.4",
     "dotenv": "^8.2.0",
     "faker": "^5.1.0",
     "husky": "^4.3.0",

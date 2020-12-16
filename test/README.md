@@ -1,33 +1,24 @@
-# How to Generate DynamoDB Response?
+# Tests
 
-1. Create a file `./dynamodbResponse.json` and initializes it with `[]`.
-1. Copy this code inside `src/index.ts > queryDynamoDB`.
+Tests are made with a real table.
 
-```ts
-(() => {
-  const fs = require('fs');
-  const path = require('path');
-  const filePath = path.resolve(process.cwd(), 'test', 'dynamodbResponse.json');
-  const data = JSON.parse(fs.readFileSync(filePath).toString());
-  const newData = [
-    ...data,
-    {
-      matcher: {
-        cursor: expressionAttributeValues[':cursor'],
-        limit,
-        scanIndexForward,
-        keyConditionExpression,
-      },
-      response,
-    },
-  ];
-  const newDataString = JSON.stringify(newData, null, 2);
-  fs.writeFileSync(filePath, newDataString);
-})();
+## Populate DBB Table
+
+A script was created to populate DBB table with some data to be queried in our examples. To create this package, a table with a single key, named `id`, with a composite GSI was created. The values of the region, table name, hash and range key of the GSI must be placed in a `.env` file.
+
+```sh
+HASH_KEY_NAME=... // name of the GSI hash key
+HASH_KEY_VALUE=... // hash key value to be queried
+RANGE_KEY_NAME=.. // name of the range key
+TABLE_NAME=... // DBB table name
+REGION=... // DBB region
+INDEX_NAME=... // name of the GSI
 ```
 
-3. Remove DynamoDB mocking from `./index.test.ts`.
-1. Run `yarn test`.
-1. Replace `hashKeyName`, `hashKeyValue` and `rangeKeyName` of the file `./dynamodbResponse.json`.
-1. Copy data inside `test/index.test.ts` > `mockDynamoDBQuery`.
-1. Remove the script and add mock again.
+With these `.env` values and valid AWS credentials in your environment, execute:
+
+```
+yarn run populate-table
+```
+
+to execute the script `populateTable.ts` to create items whose range key values goes from `cursor-10` to `cursor-34` .

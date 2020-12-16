@@ -54,36 +54,66 @@ import { paginate } from 'dynamodb-cursor-based-pagination';
 
 `paginate` is a default exported method whose signature is:
 
-```
-const paginate: <T = any>(params: {
-    credentials?: Credentials;
-    region: string;
-    tableName: string;
-    hashKeyName: string;
-    hashKeyValue: string;
-    rangeKeyName: string;
-    indexName?: string;
-    beginsWith?: string;
-    sort?: "ASC" | "DESC";
-    after?: string;
-    before?: string;
-    first?: number;
-    last?: number;
+```ts
+type paginate<T = any> = ({
+  credentials,
+  region,
+  tableName,
+  hashKeyName,
+  hashKeyValue,
+  rangeKeyName,
+  indexName,
+  projectionExpression,
+  filterExpression,
+  filterAttributeNames,
+  filterAttributeValues,
+  beginsWith,
+  sort,
+  after,
+  first,
+  before,
+  last,
+}: {
+  credentials?: Credentials | undefined;
+  region: string;
+  tableName: string;
+  hashKeyName: string;
+  hashKeyValue: string;
+  rangeKeyName: string;
+  beginsWith?: string | undefined;
+  indexName?: string | undefined;
+  projectionExpression?: string | undefined;
+  filterExpression?: string | undefined;
+  filterAttributeNames?:
+    | {
+        [key: string]: string;
+      }
+    | undefined;
+  filterAttributeValues?:
+    | {
+        [key: string]: any;
+      }
+    | undefined;
+  sort?: 'ASC' | 'DESC' | undefined;
+  after?: string | undefined;
+  before?: string | undefined;
+  first?: number | undefined;
+  last?: number | undefined;
 }) => Promise<{
-    edges: {
-        cursor: string;
-        node: T;
-    }[];
-    pageInfo: {
-        hasPreviousPage: boolean;
-        hasNextPage: boolean;
-        startCursor?: string;
-        endCursor?: string;
-    };
-    consumedCapacity: DynamoDB.DocumentClient.ConsumedCapacity | undefined;
-    count: number | undefined;
-    scannedCount: number | undefined;
-    lastEvaluatedKey: string | undefined;
+  edges: {
+    cursor: string;
+    node: T;
+  }[];
+  pageInfo: {
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+    startCursor?: string | undefined;
+    endCursor?: string | undefined;
+  };
+  consumedCapacity: number | undefined;
+  count: number | undefined;
+  scannedCount: number | undefined;
+  lastEvaluatedKey: string | undefined;
 }>;
 ```
 
@@ -114,6 +144,11 @@ paginate({
 
 The parameters `region`, `tableName`, `hashKeyName`, `hashKeyValue`, `rangeKeyName`, `indexName` are used to identify your DynamoDB table.
 
+### Cursor Parameters
+
+- `first` and `after`: [forward pagination arguments.](https://relay.dev/graphql/connections.htm#sec-Forward-pagination-arguments)
+- `last` and `before`: [backward pagination arguments.](https://relay.dev/graphql/connections.htm#sec-Backward-pagination-arguments)
+
 ### Sorting
 
 - `sort: 'ASC' | 'DESC' (default 'DESC')`
@@ -126,10 +161,34 @@ Querying on DynamoBD is related to the sorting of the items in function of their
 
 Your DynamoDB table may have an architecture that made the items have a [`beginsWith` property](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions). If you want to paginate over items that have such property, just add `beginsWith` to `paginate` method.
 
-### Cursor Parameters
+### Projection Expression
 
-- `first` and `after`: [forward pagination arguments.](https://relay.dev/graphql/connections.htm#sec-Forward-pagination-arguments)
-- `last` and `before`: [backward pagination arguments.](https://relay.dev/graphql/connections.htm#sec-Backward-pagination-arguments)
+- `projectionExpression: string | undefined`
+
+[DynamoDB reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ProjectionExpressions.html).
+
+### Filtering
+
+- `filterExpression?: string | undefined`
+- `filterAttributeNames: { [key: string]: string; } | undefined`
+- `filterAttributeValues: { [key: string]: string; } | undefined`
+
+[DynamoDB reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression).
+
+```ts
+// Example
+
+paginate({
+  ... // oher params,
+  filterExpression: '#parity = :parity',
+  filterAttributeNames: {
+    '#parity': 'parity',
+  },
+  filterAttributeValues: {
+    ':parity': 'EVEN',
+  },
+});
+```
 
 ## Examples
 

@@ -1,68 +1,6 @@
 import { DynamoDB, Credentials } from 'aws-sdk';
-// import debug from 'debug';
 
 type Sort = 'ASC' | 'DESC';
-
-// const logQueryParams = debug('queryParams');
-// const logDynamoDBResponse = debug('dynamoDBResponse');
-
-export const queryDynamoDB = async <T>({
-  credentials,
-  region,
-  tableName,
-  indexName,
-  scanIndexForward,
-  rangeKeyName,
-  expressionAttributeNames,
-  expressionAttributeValues,
-  keyConditionExpression,
-  limit,
-}: {
-  credentials?: Credentials;
-  region: string;
-  tableName: string;
-  indexName?: string;
-  scanIndexForward?: boolean;
-  rangeKeyName: string;
-  expressionAttributeNames: any;
-  expressionAttributeValues: any;
-  keyConditionExpression: string;
-  limit?: number;
-}) => {
-  const documentClient = new DynamoDB.DocumentClient({ credentials, region });
-
-  const queryParams: DynamoDB.DocumentClient.QueryInput = {
-    ExpressionAttributeNames: expressionAttributeNames,
-    ExpressionAttributeValues: expressionAttributeValues,
-    KeyConditionExpression: keyConditionExpression,
-    IndexName: indexName,
-    TableName: tableName,
-    ScanIndexForward: scanIndexForward,
-    Limit: limit,
-  };
-
-  // logQueryParams(JSON.stringify(queryParams, null, 2));
-
-  const response = await documentClient.query(queryParams).promise();
-
-  // logDynamoDBResponse(JSON.stringify(response, null, 2));
-
-  const {
-    Items,
-    LastEvaluatedKey,
-    ConsumedCapacity,
-    Count,
-    ScannedCount,
-  } = response;
-
-  return {
-    items: Items as T[],
-    lastEvaluatedKey: LastEvaluatedKey?.[rangeKeyName] as string | undefined,
-    consumedCapacity: ConsumedCapacity,
-    count: Count,
-    scannedCount: ScannedCount,
-  };
-};
 
 export const paginate = async <T = any>({
   credentials,
@@ -72,6 +10,10 @@ export const paginate = async <T = any>({
   hashKeyValue,
   rangeKeyName,
   indexName,
+  projectionExpression,
+  filterExpression,
+  filterAttributeNames,
+  filterAttributeValues,
   beginsWith = '',
   sort = 'DESC',
   after,
@@ -85,14 +27,20 @@ export const paginate = async <T = any>({
   hashKeyName: string;
   hashKeyValue: string;
   rangeKeyName: string;
-  indexName?: string;
   beginsWith?: string;
+  indexName?: string;
+  projectionExpression?: string;
+  filterExpression?: string;
+  filterAttributeNames?: { [key: string]: string };
+  filterAttributeValues?: { [key: string]: any };
   sort?: Sort;
   after?: string;
   before?: string;
   first?: number;
   last?: number;
 }) => {
+  const documentClient = new DynamoDB.DocumentClient({ credentials, region });
+
   const {
     expressionAttributeNames,
     expressionAttributeValues,
@@ -100,13 +48,27 @@ export const paginate = async <T = any>({
     scanIndexForward,
     limit,
   } = (() => {
+    const paginateHashKeyName = '#paginateHashKey';
+    const paginateHashKeyValue = ':paginateHashKey';
+    const paginateCursorName = '#paginateCursor';
+    const paginateCursorValue = ':paginateCursor';
+
     const params = {
-      expressionAttributeNames: { '#hashKey': hashKeyName } as any,
-      expressionAttributeValues: { ':hashKey': hashKeyValue } as any,
-      keyConditionExpression: '#hashKey = :hashKey',
+      expressionAttributeNames: {
+        ...filterAttributeNames,
+        [paginateHashKeyName]: hashKeyName,
+      } as any,
+      expressionAttributeValues: {
+        ...filterAttributeValues,
+        [paginateHashKeyValue]: hashKeyValue,
+      } as any,
+      keyConditionExpression: `${paginateHashKeyName} = ${paginateHashKeyValue}`,
       scanIndexForward: true,
       limit: undefined as number | undefined,
     };
+
+    const getKeyConditionExpression = (operator: string) =>
+      `${paginateHashKeyName} = ${paginateHashKeyValue} AND ${paginateCursorName} ${operator} ${paginateCursorValue}`;
 
     if (after || first) {
       if (first && first < 0) {
@@ -114,10 +76,11 @@ export const paginate = async <T = any>({
       }
 
       if (after) {
-        params.expressionAttributeNames['#cursor'] = rangeKeyName;
-        params.expressionAttributeValues[':cursor'] = beginsWith + after;
+        params.expressionAttributeNames[paginateCursorName] = rangeKeyName;
+        params.expressionAttributeValues[paginateCursorValue] =
+          beginsWith + after;
         const operator = sort === 'ASC' ? '>' : '<';
-        params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
+        params.keyConditionExpression = getKeyConditionExpression(operator);
       }
 
       params.scanIndexForward = sort === 'ASC';
@@ -128,10 +91,11 @@ export const paginate = async <T = any>({
       }
 
       if (before) {
-        params.expressionAttributeNames['#cursor'] = rangeKeyName;
-        params.expressionAttributeValues[':cursor'] = beginsWith + before;
+        params.expressionAttributeNames[paginateCursorName] = rangeKeyName;
+        params.expressionAttributeValues[paginateCursorValue] =
+          beginsWith + before;
         const operator = sort === 'DESC' ? '>' : '<';
-        params.keyConditionExpression = `#hashKey = :hashKey AND #cursor ${operator} :cursor`;
+        params.keyConditionExpression = getKeyConditionExpression(operator);
       }
 
       params.scanIndexForward = sort === 'DESC';
@@ -141,25 +105,49 @@ export const paginate = async <T = any>({
     return params;
   })();
 
+  const queryDynamoDB = async <T>() => {
+    const queryParams: DynamoDB.DocumentClient.QueryInput = {
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      KeyConditionExpression: keyConditionExpression,
+      IndexName: indexName,
+      TableName: tableName,
+      ScanIndexForward: scanIndexForward,
+      Limit: limit,
+      ProjectionExpression: projectionExpression,
+      FilterExpression: filterExpression,
+    };
+
+    const response = await documentClient.query(queryParams).promise();
+
+    const {
+      Items,
+      LastEvaluatedKey,
+      ConsumedCapacity,
+      Count,
+      ScannedCount,
+    } = response;
+
+    return {
+      items: Items as T[],
+      lastEvaluatedKey: LastEvaluatedKey?.[rangeKeyName] as string | undefined,
+      consumedCapacity: ConsumedCapacity as number | undefined,
+      count: Count,
+      scannedCount: ScannedCount,
+    };
+  };
+
   const {
     items,
     lastEvaluatedKey,
     consumedCapacity,
     count,
     scannedCount,
-  } = await queryDynamoDB<T>({
-    credentials,
-    region,
-    tableName,
-    indexName,
-    scanIndexForward,
-    rangeKeyName,
-    expressionAttributeNames,
-    expressionAttributeValues,
-    keyConditionExpression,
-    limit,
-  });
+  } = await queryDynamoDB<T>();
 
+  /**
+   * Used to remove beginsWith from cursor.
+   */
   const replacerRegex = new RegExp(`^${beginsWith}`);
 
   const edges = items
