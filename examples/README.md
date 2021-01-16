@@ -18,29 +18,24 @@ See `test/README.md` for more details.
 
 Check the tests case to see more examples.
 
-### Descending Sorting
+### Examples
 
 #### Case 1 - `first: 3`
 
 - Command:
 
-```
- yarn run paginate --first=3
+```sh
+yarn run paginate --first=3
 ```
 
 - Query Parameters
 
 ```json
 {
-  "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME
-  },
-  "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE
-  },
-  "KeyConditionExpression": "#hashKey = :hashKey",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
+  "ExpressionAttributeNames": { "#paginateHashKey": "hashKey" },
+  "ExpressionAttributeValues": { ":paginateHashKey": "hashKeyValue" },
+  "KeyConditionExpression": "#paginateHashKey = :paginateHashKey",
+  "TableName": "DynamoDBCursorBasedPagination",
   "ScanIndexForward": false,
   "Limit": 3
 }
@@ -54,25 +49,28 @@ Check the tests case to see more examples.
     {
       "cursor": "cursor-34",
       "node": {
-        "id": "cursor-34",
-        [RANGE_KEY_NAME]: "cursor-34",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 34,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-34",
+        "parity": "EVEN"
       }
     },
     {
       "cursor": "cursor-33",
       "node": {
-        "id": "cursor-33",
-        [RANGE_KEY_NAME]: "cursor-33",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 33,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-33",
+        "parity": "ODD"
       }
     },
     {
       "cursor": "cursor-32",
       "node": {
-        "id": "cursor-32",
-        [RANGE_KEY_NAME]: "cursor-32",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 32,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-32",
+        "parity": "EVEN"
       }
     }
   ],
@@ -92,8 +90,8 @@ Check the tests case to see more examples.
 
 - Command:
 
-```
- yarn run paginate --first=2 --after=cursor-30
+```sh
+yarn run paginate --first=2 --after=cursor-30
 ```
 
 - Query Parameters
@@ -101,16 +99,15 @@ Check the tests case to see more examples.
 ```json
 {
   "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME,
-    "#cursor": RANGE_KEY_NAME
+    "#paginateHashKey": "hashKey",
+    "#paginateCursor": "rangeKey"
   },
   "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE,
-    ":cursor": "cursor-30"
+    ":paginateHashKey": "hashKeyValue",
+    ":paginateCursor": "cursor-30"
   },
-  "KeyConditionExpression": "#hashKey = :hashKey AND #cursor < :cursor",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
+  "KeyConditionExpression": "#paginateHashKey = :paginateHashKey AND #paginateCursor < :paginateCursor",
+  "TableName": "DynamoDBCursorBasedPagination",
   "ScanIndexForward": false,
   "Limit": 2
 }
@@ -124,17 +121,19 @@ Check the tests case to see more examples.
     {
       "cursor": "cursor-29",
       "node": {
-        "id": "cursor-29",
-        [RANGE_KEY_NAME]: "cursor-29",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 29,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-29",
+        "parity": "ODD"
       }
     },
     {
       "cursor": "cursor-28",
       "node": {
-        "id": "cursor-28",
-        [RANGE_KEY_NAME]: "cursor-28",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 28,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-28",
+        "parity": "EVEN"
       }
     }
   ],
@@ -154,7 +153,7 @@ Check the tests case to see more examples.
 
 - Command
 
-```
+```sh
 yarn run paginate --last=3 --before=cursor-15
 ```
 
@@ -163,16 +162,15 @@ yarn run paginate --last=3 --before=cursor-15
 ```json
 {
   "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME,
-    "#cursor": RANGE_KEY_NAME
+    "#paginateHashKey": "hashKey",
+    "#paginateCursor": "rangeKey"
   },
   "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE,
-    ":cursor": "cursor-15"
+    ":paginateHashKey": "hashKeyValue",
+    ":paginateCursor": "cursor-15"
   },
-  "KeyConditionExpression": "#hashKey = :hashKey AND #cursor > :cursor",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
+  "KeyConditionExpression": "#paginateHashKey = :paginateHashKey AND #paginateCursor > :paginateCursor",
+  "TableName": "DynamoDBCursorBasedPagination",
   "ScanIndexForward": true,
   "Limit": 3
 }
@@ -186,25 +184,28 @@ yarn run paginate --last=3 --before=cursor-15
     {
       "cursor": "cursor-18",
       "node": {
-        "id": "cursor-18",
-        [RANGE_KEY_NAME]: "cursor-18",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 18,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-18",
+        "parity": "EVEN"
       }
     },
     {
       "cursor": "cursor-17",
       "node": {
-        "id": "cursor-17",
-        [RANGE_KEY_NAME]: "cursor-17",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 17,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-17",
+        "parity": "ODD"
       }
     },
     {
       "cursor": "cursor-16",
       "node": {
-        "id": "cursor-16",
-        [RANGE_KEY_NAME]: "cursor-16",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 16,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-16",
+        "parity": "EVEN"
       }
     }
   ],
@@ -224,7 +225,7 @@ yarn run paginate --last=3 --before=cursor-15
 
 - Command
 
-```
+```sh
 yarn run paginate --last=7 --before=5 --beginsWith=cursor-1
 ```
 
@@ -233,16 +234,15 @@ yarn run paginate --last=7 --before=5 --beginsWith=cursor-1
 ```json
 {
   "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME,
-    "#cursor": RANGE_KEY_NAME
+    "#paginateHashKey": "hashKey",
+    "#paginateCursor": "rangeKey"
   },
   "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE,
-    ":cursor": "cursor-15"
+    ":paginateHashKey": "hashKeyValue",
+    ":paginateCursor": "cursor-15"
   },
-  "KeyConditionExpression": "#hashKey = :hashKey AND #cursor > :cursor",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
+  "KeyConditionExpression": "#paginateHashKey = :paginateHashKey AND #paginateCursor > :paginateCursor",
+  "TableName": "DynamoDBCursorBasedPagination",
   "ScanIndexForward": true,
   "Limit": 7
 }
@@ -256,33 +256,37 @@ yarn run paginate --last=7 --before=5 --beginsWith=cursor-1
     {
       "cursor": "9",
       "node": {
-        "id": "cursor-19",
-        [RANGE_KEY_NAME]: "cursor-19",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 19,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-19",
+        "parity": "ODD"
       }
     },
     {
       "cursor": "8",
       "node": {
-        "id": "cursor-18",
-        [RANGE_KEY_NAME]: "cursor-18",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 18,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-18",
+        "parity": "EVEN"
       }
     },
     {
       "cursor": "7",
       "node": {
-        "id": "cursor-17",
-        [RANGE_KEY_NAME]: "cursor-17",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 17,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-17",
+        "parity": "ODD"
       }
     },
     {
       "cursor": "6",
       "node": {
-        "id": "cursor-16",
-        [RANGE_KEY_NAME]: "cursor-16",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 16,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-16",
+        "parity": "EVEN"
       }
     }
   ],
@@ -298,81 +302,11 @@ yarn run paginate --last=7 --before=5 --beginsWith=cursor-1
 }
 ```
 
-### Ascending Sorting
-
-#### Case 1 - `first: 3` and `sort: ASC`
+#### Case 5 - `first: 2`, `after: cursor-30` and `sort: ASC`
 
 - Command
 
-```
-yarn run paginate --first=3 --sort=ASC
-```
-
-- Query Parameters
-
-```json
-{
-  "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME
-  },
-  "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE
-  },
-  "KeyConditionExpression": "#hashKey = :hashKey",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
-  "ScanIndexForward": true,
-  "Limit": 3
-}
-```
-
-- Response
-
-```json
-{
-  "edges": [
-    {
-      "cursor": "cursor-10",
-      "node": {
-        "id": "cursor-10",
-        [RANGE_KEY_NAME]: "cursor-10",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
-      }
-    },
-    {
-      "cursor": "cursor-11",
-      "node": {
-        "id": "cursor-11",
-        [RANGE_KEY_NAME]: "cursor-11",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
-      }
-    },
-    {
-      "cursor": "cursor-12",
-      "node": {
-        "id": "cursor-12",
-        [RANGE_KEY_NAME]: "cursor-12",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
-      }
-    }
-  ],
-  "pageInfo": {
-    "hasPreviousPage": false,
-    "hasNextPage": true,
-    "startCursor": "cursor-10",
-    "endCursor": "cursor-12"
-  },
-  "count": 3,
-  "scannedCount": 3,
-  "lastEvaluatedKey": "cursor-12"
-}
-```
-
-#### Case 2 - `first: 2`, `after: cursor-30` and `sort: ASC`
-
-- Command
-
-```
+```sh
 yarn run paginate --first=2 --after=cursor-30 --sort=ASC
 ```
 
@@ -381,16 +315,15 @@ yarn run paginate --first=2 --after=cursor-30 --sort=ASC
 ```json
 {
   "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME,
-    "#cursor": RANGE_KEY_NAME
+    "#paginateHashKey": "hashKey",
+    "#paginateCursor": "rangeKey"
   },
   "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE,
-    ":cursor": "cursor-30"
+    ":paginateHashKey": "hashKeyValue",
+    ":paginateCursor": "cursor-30"
   },
-  "KeyConditionExpression": "#hashKey = :hashKey AND #cursor > :cursor",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
+  "KeyConditionExpression": "#paginateHashKey = :paginateHashKey AND #paginateCursor > :paginateCursor",
+  "TableName": "DynamoDBCursorBasedPagination",
   "ScanIndexForward": true,
   "Limit": 2
 }
@@ -404,17 +337,19 @@ yarn run paginate --first=2 --after=cursor-30 --sort=ASC
     {
       "cursor": "cursor-31",
       "node": {
-        "id": "cursor-31",
-        [RANGE_KEY_NAME]: "cursor-31",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 31,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-31",
+        "parity": "ODD"
       }
     },
     {
       "cursor": "cursor-32",
       "node": {
-        "id": "cursor-32",
-        [RANGE_KEY_NAME]: "cursor-32",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
+        "index": 32,
+        "hashKey": "hashKeyValue",
+        "rangeKey": "cursor-32",
+        "parity": "EVEN"
       }
     }
   ],
@@ -427,75 +362,5 @@ yarn run paginate --first=2 --after=cursor-30 --sort=ASC
   "count": 2,
   "scannedCount": 2,
   "lastEvaluatedKey": "cursor-32"
-}
-```
-
-#### Case 3 - `last: 3`, `before: cursor-15` and `sort: ASC`
-
-- Command
-
-```
-yarn run paginate --last=3 --before=cursor-15 --sort=ASC
-```
-
-- Query Parameters
-
-```json
-{
-  "ExpressionAttributeNames": {
-    "#hashKey": HASH_KEY_NAME,
-    "#cursor": RANGE_KEY_NAME
-  },
-  "ExpressionAttributeValues": {
-    ":hashKey": HASH_KEY_VALUE,
-    ":cursor": "cursor-15"
-  },
-  "KeyConditionExpression": "#hashKey = :hashKey AND #cursor < :cursor",
-  "IndexName": INDEX_NAME,
-  "TableName": TABLE_NAME,
-  "ScanIndexForward": false,
-  "Limit": 3
-}
-```
-
-- Response
-
-```json
-{
-  "edges": [
-    {
-      "cursor": "cursor-12",
-      "node": {
-        "id": "cursor-12",
-        [RANGE_KEY_NAME]: "cursor-12",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
-      }
-    },
-    {
-      "cursor": "cursor-13",
-      "node": {
-        "id": "cursor-13",
-        [RANGE_KEY_NAME]: "cursor-13",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
-      }
-    },
-    {
-      "cursor": "cursor-14",
-      "node": {
-        "id": "cursor-14",
-        [RANGE_KEY_NAME]: "cursor-14",
-        [HASH_KEY_NAME]: HASH_KEY_VALUE
-      }
-    }
-  ],
-  "pageInfo": {
-    "hasPreviousPage": true,
-    "hasNextPage": true,
-    "startCursor": "cursor-12",
-    "endCursor": "cursor-14"
-  },
-  "count": 3,
-  "scannedCount": 3,
-  "lastEvaluatedKey": "cursor-12"
 }
 ```

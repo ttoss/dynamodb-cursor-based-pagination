@@ -52,7 +52,7 @@ You also need install `aws-sdk` in your project because it is a peer dependency 
 import { paginate } from 'dynamodb-cursor-based-pagination';
 ```
 
-`paginate` is a default exported method whose signature is:
+`paginate` is a method whose signature is:
 
 ```ts
 type paginate<T = any> = ({
@@ -142,7 +142,7 @@ paginate({
 
 ### DynamoDB Table Parameters
 
-The parameters `region`, `tableName`, `hashKeyName`, `hashKeyValue`, `rangeKeyName`, `indexName` are used to identify your DynamoDB table.
+The parameters `region`, `tableName`, `hashKeyName`, `hashKeyValue`, `rangeKeyName`, `indexName` are used to identify your DynamoDB table and the partition.
 
 ### Cursor Parameters
 
@@ -165,7 +165,7 @@ Your DynamoDB table may have an architecture that made the items have a [`begins
 
 - `projectionExpression: string | undefined`
 
-[DynamoDB reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ProjectionExpressions.html).
+[DynamoDB projection expression reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ProjectionExpressions.html).
 
 ### Filtering
 
@@ -173,7 +173,7 @@ Your DynamoDB table may have an architecture that made the items have a [`begins
 - `filterAttributeNames: { [key: string]: string; } | undefined`
 - `filterAttributeValues: { [key: string]: string; } | undefined`
 
-[DynamoDB reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression).
+[DynamoDB filtering reference](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression).
 
 ```ts
 // Example
