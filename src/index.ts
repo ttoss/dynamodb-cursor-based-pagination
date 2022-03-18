@@ -1,15 +1,15 @@
-import { DynamoDB, Credentials } from 'aws-sdk';
-
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+  
 type Sort = 'ASC' | 'DESC';
 
 export const paginate = async <T = any>({
-  credentials,
-  region,
+  dynamoDBClient,
   tableName,
-  hashKeyName,
+  hashKey,
   hashKeyValue,
-  rangeKeyName,
-  indexName,
+  rangeKey,
+  index,
   projectionExpression,
   filterExpression,
   filterAttributeNames,
@@ -21,14 +21,13 @@ export const paginate = async <T = any>({
   before,
   last,
 }: {
-  credentials?: Credentials;
-  region: string;
+  dynamoDBClient: DynamoDBClient;
   tableName: string;
-  hashKeyName: string;
+  hashKey: string;
   hashKeyValue: string;
-  rangeKeyName: string;
+  rangeKey: string;
   beginsWith?: string;
-  indexName?: string;
+  index?: string;
   projectionExpression?: string;
   filterExpression?: string;
   filterAttributeNames?: { [key: string]: string };
@@ -39,7 +38,7 @@ export const paginate = async <T = any>({
   first?: number;
   last?: number;
 }) => {
-  const documentClient = new DynamoDB.DocumentClient({ credentials, region });
+  const documentClient = DynamoDBDocumentClient.from(dynamoDBClient);
 
   const {
     expressionAttributeNames,
@@ -56,7 +55,7 @@ export const paginate = async <T = any>({
     const params = {
       expressionAttributeNames: {
         ...filterAttributeNames,
-        [paginateHashKeyName]: hashKeyName,
+        [paginateHashKeyName]: hashKey,
       } as any,
       expressionAttributeValues: {
         ...filterAttributeValues,
@@ -76,7 +75,7 @@ export const paginate = async <T = any>({
       }
 
       if (after) {
-        params.expressionAttributeNames[paginateCursorName] = rangeKeyName;
+        params.expressionAttributeNames[paginateCursorName] = rangeKey;
         params.expressionAttributeValues[paginateCursorValue] =
           beginsWith + after;
         const operator = sort === 'ASC' ? '>' : '<';
@@ -91,7 +90,7 @@ export const paginate = async <T = any>({
       }
 
       if (before) {
-        params.expressionAttributeNames[paginateCursorName] = rangeKeyName;
+        params.expressionAttributeNames[paginateCursorName] = rangeKey;
         params.expressionAttributeValues[paginateCursorValue] =
           beginsWith + before;
         const operator = sort === 'DESC' ? '>' : '<';
@@ -106,11 +105,11 @@ export const paginate = async <T = any>({
   })();
 
   const queryDynamoDB = async <T>() => {
-    const queryParams: DynamoDB.DocumentClient.QueryInput = {
+    const queryParams: QueryCommandInput = {
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
       KeyConditionExpression: keyConditionExpression,
-      IndexName: indexName,
+      IndexName: index,
       TableName: tableName,
       ScanIndexForward: scanIndexForward,
       Limit: limit,
@@ -118,7 +117,7 @@ export const paginate = async <T = any>({
       FilterExpression: filterExpression,
     };
 
-    const response = await documentClient.query(queryParams).promise();
+    const response = await documentClient.send(new QueryCommand(queryParams));
 
     const {
       Items,
@@ -130,7 +129,7 @@ export const paginate = async <T = any>({
 
     return {
       items: Items as T[],
-      lastEvaluatedKey: LastEvaluatedKey?.[rangeKeyName] as string | undefined,
+      lastEvaluatedKey: LastEvaluatedKey?.[rangeKey] as string | undefined,
       consumedCapacity: ConsumedCapacity as number | undefined,
       count: Count,
       scannedCount: ScannedCount,
@@ -151,9 +150,9 @@ export const paginate = async <T = any>({
   const replacerRegex = new RegExp(`^${beginsWith}`);
 
   const edges = items
-    .filter(node => String((node as any)[rangeKeyName]).startsWith(beginsWith))
+    .filter(node => String((node as any)[rangeKey]).startsWith(beginsWith))
     .map(node => ({
-      cursor: String((node as any)[rangeKeyName]).replace(replacerRegex, ''),
+      cursor: String((node as any)[rangeKey]).replace(replacerRegex, ''),
       node,
     }))
     .sort(

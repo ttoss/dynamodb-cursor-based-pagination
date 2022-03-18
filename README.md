@@ -56,49 +56,39 @@ import { paginate } from 'dynamodb-cursor-based-pagination';
 
 ```ts
 type paginate<T = any> = ({
-  credentials,
-  region,
+  dynamoDBClient,
   tableName,
-  hashKeyName,
+  hashKey,
   hashKeyValue,
-  rangeKeyName,
-  indexName,
+  rangeKey,
+  index,
   projectionExpression,
   filterExpression,
   filterAttributeNames,
   filterAttributeValues,
-  beginsWith,
-  sort,
+  beginsWith = '',
+  sort = 'DESC',
   after,
   first,
   before,
   last,
 }: {
-  credentials?: Credentials | undefined;
-  region: string;
+  dynamoDBClient: DynamoDBClient;
   tableName: string;
-  hashKeyName: string;
+  hashKey: string;
   hashKeyValue: string;
-  rangeKeyName: string;
-  beginsWith?: string | undefined;
-  indexName?: string | undefined;
-  projectionExpression?: string | undefined;
-  filterExpression?: string | undefined;
-  filterAttributeNames?:
-    | {
-        [key: string]: string;
-      }
-    | undefined;
-  filterAttributeValues?:
-    | {
-        [key: string]: any;
-      }
-    | undefined;
-  sort?: 'ASC' | 'DESC' | undefined;
-  after?: string | undefined;
-  before?: string | undefined;
-  first?: number | undefined;
-  last?: number | undefined;
+  rangeKey: string;
+  beginsWith?: string;
+  index?: string;
+  projectionExpression?: string;
+  filterExpression?: string;
+  filterAttributeNames?: { [key: string]: string };
+  filterAttributeValues?: { [key: string]: any };
+  sort?: Sort;
+  after?: string;
+  before?: string;
+  first?: number;
+  last?: number;
 }) => Promise<{
   edges: {
     cursor: string;
@@ -196,28 +186,9 @@ Let's check [some examples](examples/README.md) to understand better [these requ
 
 ## Test
 
-To test against a real table:
+Before real use, you can test an example with DynamoDB Local for emulate a server and Jest for unit testing. For further details, see the README.md on Test folder.
 
-```
-yarn run test
-```
 
-To test against a real table, provide these values in your environment - you may want provide them in a `.env` file:
-
-```
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-AWS_SESSION_TOKEN
-HASH_KEY_NAME
-HASH_KEY_VALUE
-RANGE_KEY_NAME
-TABLE_NAME
-REGION
-INDEX_NAME
-BEGINS_WITH
-```
-
-Also, you need to populate the table with data to be tested. Please, refer to [this section](test/README.md#populate-dbb-table) to add data to the table.
 
 ## Author
 
